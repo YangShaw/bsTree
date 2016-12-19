@@ -20,13 +20,14 @@ public:
 class myheap {
 public:
 	heapNode *root;
+	heapNode *tail;		//用来标识尾节点，用于删除操作
 	heapNode *theroot = new heapNode(0, NULL, NULL);
 	queue<heapNode*> *que;
-	int size;
+	int size;		//从1开始索引
 
 	myheap(heapNode *theRoot);
-	//void insert(heapNode *newNode);
 	void insert(int key);
+	void pop();
 	void print(heapNode *root) const;
 };
 
@@ -43,7 +44,7 @@ void myheap::insert(int key) {
 	if (que->empty()) {
 		que->push(newNode);
 		newNode->father = theroot;
-		
+		tail = newNode;
 	}
 	else {
 		heapNode *temp = que->front();
@@ -56,6 +57,7 @@ void myheap::insert(int key) {
 				newNode->key = fatherkey;
 				newNode->father->key = childkey;
 				que->push(newNode);
+				tail = newNode;
 				//只在最下面这一层有入队的需求，后面如果还不满足就只在倒数第二层网上while，而这些都和入队无关了
 				
 				heapNode *currentnode = newNode->father;	//不能用原节点操作，因为会改变父子关系。只能交换每个节点的key，而不能交换节点本身
@@ -69,7 +71,7 @@ void myheap::insert(int key) {
 			}	
 			else {
 				que->push(newNode);		//大小合适就不用改 直接插入。而这一层都合适说明上面的全都合适，所以把while
-										//语句放在上面的if分支里就可以了！
+				tail = newNode;			//语句放在上面的if分支里就可以了！
 			}
 			
 			
@@ -84,7 +86,7 @@ void myheap::insert(int key) {
 				newNode->father->key = childkey;
 				que->pop();
 				que->push(newNode);
-
+				tail = newNode;
 				heapNode *currentnode = newNode->father;	
 				while (currentnode->father != theroot&&currentnode->key > currentnode->father->key) {
 					int currentkey = currentnode->key;
@@ -96,11 +98,38 @@ void myheap::insert(int key) {
 			else {
 				que->pop();
 				que->push(newNode);
+				tail = newNode;
 			}
 			
 		}
 	}
 	size++;		
+}
+
+void myheap::pop() {
+	heapNode *current = root;
+	heapNode *bigger = current->left;
+	int tailkey = tail->key;
+	if (tail->father->right == NULL) {
+		heapNode *temp = tail->father;
+		tail->father->left = NULL;
+		tail = temp;
+	}
+	else {
+		tail = tail->father->left;
+		tail->father->right = NULL;
+	}
+		
+	while (current->right != NULL || current->left != NULL) {
+		if (current->right!=NULL&&bigger->key < current->right->key)
+			bigger = current->right;
+		if (tailkey >= bigger->key)
+			break;
+		current->key = bigger->key;
+		current = bigger;
+		bigger = current->left;
+	}
+	current->key = tailkey;
 }
 
 
@@ -120,14 +149,20 @@ void myheap::print(heapNode *t)const {
 
 
 int main() {
-	heapNode *myroot = new heapNode(1, NULL, NULL);
+	heapNode *myroot = new heapNode(20, NULL, NULL);
 	myheap *theheap = new myheap(myroot);
+	theheap->insert(14);
+	theheap->insert(10);
+	theheap->insert(15);
 	theheap->insert(2);
-	theheap->insert(3);
-	theheap->insert(4);
-	theheap->insert(5);
-	theheap->insert(6);
-	theheap->insert(7);
+	//theheap->insert(6);
+	//theheap->insert(7);
 	theheap->print(myroot);
+	cout << endl;
+	cout << theheap->tail->key;
+	theheap->pop();
+	theheap->print(myroot);
+	cout << endl;
+	cout << theheap->tail->key;
 	system("Pause");
 }
